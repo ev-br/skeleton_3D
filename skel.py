@@ -609,6 +609,13 @@ def _loop_through(img, curr_border):
     # NB: each loop is from 1 to size-1: img is padded from all sides 
     simple_border_points = []
 
+    ### XXX: 2D images
+    ### if the original is 2D, img.shape[0] == 3, the algorithm removes too much
+    ### because all points are considered 'boundary' in the 3rd direction.
+    ### Hence just bail out
+    if curr_border in (3, 4):
+        return []
+
     for z in range(1, img.shape[2] - 1):
         for y in range(1, img.shape[1] - 1):
             for x in range(1, img.shape[0] - 1):
@@ -657,26 +664,23 @@ def compute_thin_image(img):
     while unchanged_borders < 6:
         # loop until there is no change for all the six border types
         unchanged_borders = 0
-        for curr_border in range(6):
+        for curr_border in range(1, 7):
             no_change = True
             simple_border_points = _loop_through(img, curr_border)
-            print(simple_border_points)
+            print(simple_border_points, '\n')
 
-        if not simple_border_points:
-            # no more points to remove, done
-            break
+            # sequential re-checking to preserve connectivity when deleting
+            # in a parallel way
+            for pt in simple_border_points:
+                neighb = get_neighborhood(img, *pt)
+                print(" *** ", pt, is_simple_point(neighb))
+                if is_simple_point(neighb):
+                    img[pt[0], pt[1], pt[2]] = 0
+                    no_change = False
 
-        # sequential re-checking to preserve connectivity when deleting in a
-        # parallel way
-        for pt in simple_border_points:
-            neighb = get_neighborhood(img, *pt)
-            if is_simple_point(neighb):
-                img[pt[0], pt[1], pt[2]] = 0
-                no_change = False
-
-        if no_change:
-            unchanged_borders += 1
-        simple_border_points = []
+            if no_change:
+                unchanged_borders += 1
+            simple_border_points = []
 
     return img
 
