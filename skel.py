@@ -3,8 +3,9 @@ from __future__ import division, print_function, absolute_import
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def prepare_image(img_in):
-    """Convert to a binary image, pad the it w/ zeros, and ensure it's 3D. 
+    """Convert to a binary image, pad the it w/ zeros, and ensure it's 3D.
     """
     if img_in.ndim < 2 or img_in.ndim > 3:
         raise ValueError('expect 2D, got ndim = %s' % img_in.ndim)
@@ -12,7 +13,7 @@ def prepare_image(img_in):
     img = img_in.copy()
 
     if img.ndim == 2:
-        img = img.reshape((1,)+img.shape)
+        img = img.reshape((1,) + img.shape)
 
     # normalize to binary
     img[img != 0] = 1
@@ -36,11 +37,11 @@ def get_neighborhood(img, x, y, z):
     neighborhood[0] = img[x-1, y-1, z-1]
     neighborhood[1] = img[x,   y-1, z-1]
     neighborhood[2] = img[x+1, y-1, z-1]
-	
+
     neighborhood[ 3] = img[x-1, y, z-1]
     neighborhood[ 4] = img[x,   y, z-1]
     neighborhood[ 5] = img[x+1, y, z-1]
-	
+
     neighborhood[ 6] = img[x-1, y+1, z-1]
     neighborhood[ 7] = img[x,   y+1, z-1]
     neighborhood[ 8] = img[x+1, y+1, z-1]
