@@ -26,6 +26,15 @@ def prepare_image(img_in):
     return img_o
 
 
+def postprocess_image(img_o):
+    """Clip the image (padding is an implementation detail), convert to b/w.
+    """
+    img_oo = img_o[1:-1, 1:-1, 1:-1]
+    img_oo = img_oo.squeeze()
+    img_oo *= 255
+    return img_oo
+
+
 def get_neighborhood(img, x, y, z):
     """Get the neighborhood of a pixel.
 
@@ -73,17 +82,6 @@ def get_neighborhood(img, x, y, z):
     return neighborhood
 
 
-def is_endpoint(img, x, y, z):
-    """Return whether (x, y, z) is an endpoint.
-
-       (Endpoint has exactly one neighbor in the 26-neighborhood.)
-
-       Image `img` is padded, so no out-of-bounds checking.
-    """
-    # center pixel is counted, hence r.h.s. is 2
-    return np.sum(get_neighborhood(img, x, y, z)) == 2
-
-
 ### Neighborhood accessors. Keep them for now to mimic the ITK code.
 def N(img, x, y, z):
     return img[x, y-1, z]
@@ -106,7 +104,7 @@ def B(img, x, y, z):
 
 ###### look-up tables
 def fill_numpoints_LUT(n=256):
-    p = int(np.log(n) / np.log(2) + 1)
+    p = int(np.log2(n) + 1)
     return np.sum(np.arange(n)[:, None] & (1 << np.arange(p)) != 0, axis=1)
 
 NUMPOINTS_LUT = fill_numpoints_LUT()
@@ -614,7 +612,6 @@ def _loop_through(img, curr_border):
     ### if the original is 2D, img.shape[0] == 3, the algorithm removes too much
     ### because all points are considered 'boundary' in the 3rd direction.
     ### Hence just bail out
-
     if img.shape[2] == 3 and curr_border in (5, 6):
         print("skipping curr_border = ", curr_border)
         return []
@@ -622,9 +619,6 @@ def _loop_through(img, curr_border):
     for z in range(1, img.shape[2] - 1):
         for y in range(1, img.shape[1] - 1):
             for x in range(1, img.shape[0] - 1):
-
-  #              if curr_border == 2 and (x, y, z) == (2, 7, 1):
-  #                  import pdb; pdb.set_trace()
 
                 # check if pixel is foreground
                 if img[x, y, z] != 1:
@@ -640,10 +634,13 @@ def _loop_through(img, curr_border):
                     # current point is not deletable
                     continue
 
-                if is_endpoint(img, x, y, z):
-                    continue
-
                 neighborhood = get_neighborhood(img, x, y, z)
+
+                # check if (x, y, z) is an endpoint. An endpoint has exactly
+                # one neighbor in the 26-neighborhood.
+                # The center pixel is counted, thus r.h.s. is 2
+                if neighborhood.sum() == 2:
+                    continue
 
                 # check if point is Euler invariant (condition 1 in [Lee94])
                 # if it is not, it's not deletable
@@ -661,11 +658,15 @@ def _loop_through(img, curr_border):
     return simple_border_points
 
 
-def compute_thin_image(img):
+def compute_thin_image(img_in):
 
-    simple_border_points = []
+    ### prepare
+    img = prepare_image(img_in)
+
+    ### compute
 
     # loop through the image several times until there is no change
+    simple_border_points = []
     unchanged_borders = 0
     while unchanged_borders < 6:
         # loop until there is no change for all the six border types
@@ -690,7 +691,9 @@ def compute_thin_image(img):
                 unchanged_borders += 1
             simple_border_points = []
 
+    img = postprocess_image(img)
     return img
+
 
 if __name__ == "__main__":
     pass

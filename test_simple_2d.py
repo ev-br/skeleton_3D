@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 import numpy as np
 from numpy.testing import assert_equal
 
-from skel import prepare_image, compute_thin_image
+from skel import compute_thin_image
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -17,13 +17,7 @@ def check_skel(fname, viz=False):
         ax = _viz(img, **dict(marker='s', color='b', s=99, alpha=0.2))
 
     # compute
-    img1 = prepare_image(img)
-    img1 = compute_thin_image(img1)
-
-    # undo padding, convert to 2D
-    img1_2d = img1[1:-1, 1:-1, 1:-1]
-    img1_2d = img1_2d.squeeze()
-    img1_2d *= 255
+    img1_2d = compute_thin_image(img)
 
     if viz:
         ax = _viz(img1_2d, ax, **dict(marker='o', color='r',
