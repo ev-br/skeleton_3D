@@ -59,7 +59,7 @@ def _viz(img, ax=None, **kwds):
 
 if __name__ == "__main__":
 #    check_skel('loop')
-#    check_skel('cross')
-    check_skel('two-hole')
+    check_skel('cross')
+#    check_skel('two-hole')
 #    check_skel('cross_crop4')
 #    check_skel('strip')

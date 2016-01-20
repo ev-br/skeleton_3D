@@ -350,6 +350,8 @@ def is_simple_point(neighbors):
                 octree_labeling(7, label, cube)
             elif i == 25:
                 octree_labeling(8, label, cube)
+            else:
+                raise ValueError("Never be here. i = %s" % i)
             label += 1
             if label - 2 >= 2:
                 return False
@@ -668,9 +670,7 @@ def compute_thin_image(img):
     while unchanged_borders < 6:
         # loop until there is no change for all the six border types
         unchanged_borders = 0
-        for curr_border in range(1, 7):
-
-        ##    import pdb; pdb.set_trace()
+        for curr_border in (4, 3, 2, 1, 5, 6):
 
             simple_border_points = _loop_through(img, curr_border)
             print(curr_border, " : ", simple_border_points, '\n')
