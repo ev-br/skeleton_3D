@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_equal
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 from skel import prepare_image, compute_thin_image
 
@@ -12,7 +13,7 @@ def check_skel(fname, viz=True):
     img = np.loadtxt('data/' + fname + '.txt', dtype=np.uint8)
 
     if viz:
-        ax = _viz(img, **dict(marker='s', color='b', s=40, alpha=0.2))
+        ax = _viz(img, **dict(marker='s', color='b', s=99, alpha=0.2))
 
     img1 = prepare_image(img)
     img1 = compute_thin_image(img1)
@@ -31,7 +32,16 @@ def check_skel(fname, viz=True):
     if viz:
         ax = _viz(img_f, ax, **dict(marker='o', color='g', s=45, label='fiji'))
     if viz:
-        plt.legend()
+        ax.legend()
+        ax.grid(True)
+
+        def yformatter(val, pos):
+            return int(img.shape[1] - val + 1)
+        def xformatter(val, pos):
+            return int(val + 1)
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(xformatter))
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(yformatter))
+
         plt.show()
 
 
@@ -49,6 +59,7 @@ def _viz(img, ax=None, **kwds):
 
 if __name__ == "__main__":
 #    check_skel('loop')
-    check_skel('cross')
-#    check_skel('two-hole')
-#    check_skel('small_cross')
+#    check_skel('cross')
+    check_skel('two-hole')
+#    check_skel('cross_crop4')
+#    check_skel('strip')

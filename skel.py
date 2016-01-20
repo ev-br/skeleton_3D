@@ -13,7 +13,7 @@ def prepare_image(img_in):
     img = img_in.copy()
 
     if img.ndim == 2:
-        img = img.reshape((1,) + img.shape)
+        img = img.reshape(img.shape + (1,))
 
     # normalize to binary
     img[img != 0] = 1
@@ -324,9 +324,7 @@ def is_simple_point(neighbors):
     """
     # copy neighbors for labeling
     # ignore center pixel (i=13) when counting (see [Lee94])
-    cube = np.empty(26, dtype=int)
-    cube[:13] = neighbors[:13]
-    cube[13:] = neighbors[14]
+    cube = np.r_[neighbors[:13], neighbors[14:]]
 
     # set initial label
     label = 2
@@ -336,7 +334,7 @@ def is_simple_point(neighbors):
         if cube[i] == 1:
             # voxel has not been labeled yet
             # start recursion with any octant that contains the point i
-            if i in (0, 1, 3, 4, 9, 12):
+            if i in (0, 1, 3, 4, 9, 10, 12):
                 octree_labeling(1, label, cube)
             elif i in (2, 5, 11, 13):
                 octree_labeling(2, label, cube)
@@ -614,12 +612,17 @@ def _loop_through(img, curr_border):
     ### if the original is 2D, img.shape[0] == 3, the algorithm removes too much
     ### because all points are considered 'boundary' in the 3rd direction.
     ### Hence just bail out
-    if curr_border in (3, 4):
+
+    if img.shape[2] == 3 and curr_border in (5, 6):
+        print("skipping curr_border = ", curr_border)
         return []
 
     for z in range(1, img.shape[2] - 1):
         for y in range(1, img.shape[1] - 1):
             for x in range(1, img.shape[0] - 1):
+
+  #              if curr_border == 2 and (x, y, z) == (2, 7, 1):
+  #                  import pdb; pdb.set_trace()
 
                 # check if pixel is foreground
                 if img[x, y, z] != 1:
@@ -666,18 +669,22 @@ def compute_thin_image(img):
         # loop until there is no change for all the six border types
         unchanged_borders = 0
         for curr_border in range(1, 7):
-            no_change = True
+
+        ##    import pdb; pdb.set_trace()
+
             simple_border_points = _loop_through(img, curr_border)
-            print(simple_border_points, '\n')
+            print(curr_border, " : ", simple_border_points, '\n')
 
             # sequential re-checking to preserve connectivity when deleting
             # in a parallel way
+            no_change = True
             for pt in simple_border_points:
                 neighb = get_neighborhood(img, *pt)
-                print(" *** ", pt, is_simple_point(neighb))
                 if is_simple_point(neighb):
                     img[pt[0], pt[1], pt[2]] = 0
                     no_change = False
+                else:
+                    print(" *** ", pt, is_simple_point(neighb))
 
             if no_change:
                 unchanged_borders += 1
