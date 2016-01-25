@@ -3,6 +3,8 @@ from __future__ import division, print_function, absolute_import
 import numpy as np
 from numpy.testing import assert_equal
 
+from skimage import io
+
 from skel import compute_thin_image
 
 import matplotlib.pyplot as plt
@@ -59,6 +61,25 @@ def _viz(img, ax=None, **kwds):
     x, y = np.nonzero(img)
     ax.scatter(y, img.shape[1] - x, **kwds)
     return ax
+
+
+### trivial 3D images
+
+def test_simple_3d():
+    for fname in ['3/stack', '4/stack']:
+        yield check_skel_3d, fname
+
+
+def check_skel_3d(fname):
+    img = io.imread('data/' + fname + '.tif')
+    img_f = io.imread('data/' + fname + '_fiji.tif')
+
+    # XXX: skimage's (p, r, c) --> FIJI clone's (x, y, z)
+    imgt = img.transpose([1, 2, 0])
+    img_ft = img_f.transpose([1, 2, 0])
+
+    img_s = compute_thin_image(imgt)
+    assert_equal(img_s, img_ft)
 
 
 if __name__ == "__main__":
