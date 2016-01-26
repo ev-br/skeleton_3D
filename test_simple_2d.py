@@ -74,12 +74,8 @@ def check_skel_3d(fname):
     img = io.imread('data/' + fname + '.tif')
     img_f = io.imread('data/' + fname + '_fiji.tif')
 
-    # XXX: skimage's (p, r, c) --> FIJI clone's (x, y, z)
-    imgt = img.transpose([1, 2, 0])
-    img_ft = img_f.transpose([1, 2, 0])
-
-    img_s = compute_thin_image(imgt)
-    assert_equal(img_s, img_ft)
+    img_s = compute_thin_image(img)
+    assert_equal(img_s, img_f)
 
 
 if __name__ == "__main__":

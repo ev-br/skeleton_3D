@@ -12,7 +12,7 @@ def prepare_image(img_in):
     img = img_in.copy()
 
     if img.ndim == 2:
-        img = img.reshape(img.shape + (1,))
+        img = img.reshape((1,) + img.shape)
 
     # normalize to binary
     img[img != 0] = 1
@@ -34,7 +34,7 @@ def postprocess_image(img_o):
     return img_oo
 
 
-def get_neighborhood(img, x, y, z):
+def get_neighborhood(img, p, r, c):
     """Get the neighborhood of a pixel.
 
        Assume zero boundary conditions. Image is already padded, so no
@@ -42,63 +42,43 @@ def get_neighborhood(img, x, y, z):
     """
     neighborhood = np.zeros(27, dtype=np.uint8)
 
-    neighborhood[0] = img[x-1, y-1, z-1]
-    neighborhood[1] = img[x,   y-1, z-1]
-    neighborhood[2] = img[x+1, y-1, z-1]
+    neighborhood[0] = img[p-1, r-1, c-1]
+    neighborhood[1] = img[p-1, r,   c-1]
+    neighborhood[2] = img[p-1, r+1, c-1]
 
-    neighborhood[ 3] = img[x-1, y, z-1]
-    neighborhood[ 4] = img[x,   y, z-1]
-    neighborhood[ 5] = img[x+1, y, z-1]
+    neighborhood[ 3] = img[p-1, r-1, c]
+    neighborhood[ 4] = img[p-1, r,   c]
+    neighborhood[ 5] = img[p-1, r+1, c]
 
-    neighborhood[ 6] = img[x-1, y+1, z-1]
-    neighborhood[ 7] = img[x,   y+1, z-1]
-    neighborhood[ 8] = img[x+1, y+1, z-1]
+    neighborhood[ 6] = img[p-1, r-1, c+1]
+    neighborhood[ 7] = img[p-1, r,   c+1]
+    neighborhood[ 8] = img[p-1, r+1, c+1]
 
-    neighborhood[ 9] = img[x-1, y-1, z]
-    neighborhood[10] = img[x,   y-1, z]
-    neighborhood[11] = img[x+1, y-1, z]
+    neighborhood[ 9] = img[p, r-1, c-1]
+    neighborhood[10] = img[p, r,   c-1]
+    neighborhood[11] = img[p, r+1, c-1]
 
-    neighborhood[12] = img[x-1, y, z]
-    neighborhood[13] = img[x,   y, z]
-    neighborhood[14] = img[x+1, y, z]
+    neighborhood[12] = img[p, r-1, c]
+    neighborhood[13] = img[p, r,   c]
+    neighborhood[14] = img[p, r+1, c]
 
-    neighborhood[15] = img[x-1, y+1, z]
-    neighborhood[16] = img[x,   y+1, z]
-    neighborhood[17] = img[x+1, y+1, z]
+    neighborhood[15] = img[p, r-1, c+1]
+    neighborhood[16] = img[p, r,   c+1]
+    neighborhood[17] = img[p, r+1, c+1]
 
-    neighborhood[18] = img[x-1, y-1, z+1]
-    neighborhood[19] = img[x,   y-1, z+1]
-    neighborhood[20] = img[x+1, y-1, z+1]
+    neighborhood[18] = img[p+1, r-1, c-1]
+    neighborhood[19] = img[p+1, r,   c-1]
+    neighborhood[20] = img[p+1, r+1, c-1]
 
-    neighborhood[21] = img[x-1, y, z+1]
-    neighborhood[22] = img[x,   y, z+1]
-    neighborhood[23] = img[x+1, y, z+1]
+    neighborhood[21] = img[p+1, r-1, c]
+    neighborhood[22] = img[p+1, r,   c]
+    neighborhood[23] = img[p+1, r+1, c]
 
-    neighborhood[24] = img[ x-1, y+1, z+1]
-    neighborhood[25] = img[ x,   y+1, z+1]
-    neighborhood[26] = img[ x+1, y+1, z+1]
+    neighborhood[24] = img[p+1, r-1, c+1]
+    neighborhood[25] = img[p+1, r,   c+1]
+    neighborhood[26] = img[p+1, r+1, c+1]
 
     return neighborhood
-
-
-### Neighborhood accessors. Keep them for now to mimic the ITK code.
-def N(img, x, y, z):
-    return img[x, y-1, z]
-
-def S(img, x, y, z):
-    return img[x, y+1, z]
-
-def E(img, x, y, z):
-    return img[x+1, y, z]
-
-def W(img, x, y, z):
-    return img[x-1, y, z]
-
-def U(img, x, y, z):
-    return img[x, y, z+1]
-
-def B(img, x, y, z):
-    return img[x, y, z-1]
 
 
 ###### look-up tables
@@ -611,31 +591,31 @@ def _loop_through(img, curr_border):
     ### if the original is 2D, img.shape[0] == 3, the algorithm removes too much
     ### because all points are considered 'boundary' in the 3rd direction.
     ### Hence just bail out
-    if img.shape[2] == 3 and curr_border in (5, 6):
+    if img.shape[0] == 3 and curr_border in (5, 6):
         print("skipping curr_border = ", curr_border)
         return []
 
-    for z in range(1, img.shape[2] - 1):
-        for y in range(1, img.shape[1] - 1):
-            for x in range(1, img.shape[0] - 1):
+    for p in range(1, img.shape[0] - 1):
+        for c in range(1, img.shape[2] - 1):
+            for r in range(1, img.shape[1] - 1):
 
                 # check if pixel is foreground
-                if img[x, y, z] != 1:
+                if img[p, r, c] != 1:
                     continue
 
-                is_border_pt = (curr_border == 1 and N(img, x, y, z) <= 0 or
-                                curr_border == 2 and S(img, x, y, z) <= 0 or
-                                curr_border == 3 and E(img, x, y, z) <= 0 or
-                                curr_border == 4 and W(img, x, y, z) <= 0 or
-                                curr_border == 5 and U(img, x, y, z) <= 0 or
-                                curr_border == 6 and B(img, x, y, z) <= 0)
+                is_border_pt = (curr_border == 1 and img[p, r, c-1] <= 0 or  #N
+                                curr_border == 2 and img[p, r, c+1] <= 0 or  #S
+                                curr_border == 3 and img[p, r+1, c] <= 0 or  #E
+                                curr_border == 4 and img[p, r-1, c] <= 0 or  #W
+                                curr_border == 5 and img[p+1, r, c] <= 0 or  #U
+                                curr_border == 6 and img[p-1, r, c] <= 0)    #B
                 if not is_border_pt:
                     # current point is not deletable
                     continue
 
-                neighborhood = get_neighborhood(img, x, y, z)
+                neighborhood = get_neighborhood(img, p, r, c)
 
-                # check if (x, y, z) is an endpoint. An endpoint has exactly
+                # check if (p, r, c) is an endpoint. An endpoint has exactly
                 # one neighbor in the 26-neighborhood.
                 # The center pixel is counted, thus r.h.s. is 2
                 if neighborhood.sum() == 2:
@@ -652,8 +632,8 @@ def _loop_through(img, curr_border):
                 if not is_simple_point(neighborhood):
                     continue
 
-                # ok, add (x, y, z) to the list of simple border points
-                simple_border_points.append((x, y, z))
+                # ok, add (p, r, c) to the list of simple border points
+                simple_border_points.append((p, r, c))
     return simple_border_points
 
 
@@ -668,7 +648,7 @@ def compute_thin_image(img_in):
     simple_border_points = []
     unchanged_borders = 0
     while unchanged_borders < 6:
-        # loop until there is no change for all the six border types
+        # loop until there is no change for all the six border tcpes
         unchanged_borders = 0
         for curr_border in (4, 3, 2, 1, 5, 6):
 
@@ -676,12 +656,13 @@ def compute_thin_image(img_in):
             print(curr_border, " : ", simple_border_points, '\n')
 
             # sequential re-checking to preserve connectivity when deleting
-            # in a parallel way
+            # in a parallel wac
             no_change = True
             for pt in simple_border_points:
-                neighb = get_neighborhood(img, *pt)
+                p, r, c = pt
+                neighb = get_neighborhood(img, p, r, c)
                 if is_simple_point(neighb):
-                    img[pt[0], pt[1], pt[2]] = 0
+                    img[p, r, c] = 0
                     no_change = False
                 else:
                     print(" *** ", pt, is_simple_point(neighb))
