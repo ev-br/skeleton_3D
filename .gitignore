@@ -1,0 +1,13 @@
+*.pdf
+*tif
+*tiff
+*png
+*raw
+*java
+*pyc
+*md5
+*so
+*.c
+build
+
+
