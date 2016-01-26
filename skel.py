@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 import numpy as np
 
 
-def prepare_image(img_in):
+def _prepare_image(img_in):
     """Convert to a binary image, pad the it w/ zeros, and ensure it's 3D.
     """
     if img_in.ndim < 2 or img_in.ndim > 3:
@@ -25,7 +25,7 @@ def prepare_image(img_in):
     return img_o
 
 
-def postprocess_image(img_o):
+def _postprocess_image(img_o):
     """Clip the image (padding is an implementation detail), convert to b/w.
     """
     img_oo = img_o[1:-1, 1:-1, 1:-1]
@@ -596,8 +596,8 @@ def _loop_through(img, curr_border):
         return []
 
     for p in range(1, img.shape[0] - 1):
-        for c in range(1, img.shape[2] - 1):
-            for r in range(1, img.shape[1] - 1):
+        for r in range(1, img.shape[1] - 1):
+            for c in range(1, img.shape[2] - 1):
 
                 # check if pixel is foreground
                 if img[p, r, c] != 1:
@@ -640,15 +640,14 @@ def _loop_through(img, curr_border):
 def compute_thin_image(img_in):
 
     ### prepare
-    img = prepare_image(img_in)
+    img = _prepare_image(img_in)
 
     ### compute
-
-    # loop through the image several times until there is no change
-    simple_border_points = []
     unchanged_borders = 0
+
+    # loop through the image several times until there is no change for all
+    # the six border types
     while unchanged_borders < 6:
-        # loop until there is no change for all the six border tcpes
         unchanged_borders = 0
         for curr_border in (4, 3, 2, 1, 5, 6):
 
@@ -656,7 +655,7 @@ def compute_thin_image(img_in):
             print(curr_border, " : ", simple_border_points, '\n')
 
             # sequential re-checking to preserve connectivity when deleting
-            # in a parallel wac
+            # in a parallel way
             no_change = True
             for pt in simple_border_points:
                 p, r, c = pt
@@ -671,7 +670,7 @@ def compute_thin_image(img_in):
                 unchanged_borders += 1
             simple_border_points = []
 
-    img = postprocess_image(img)
+    img = _postprocess_image(img)
     return img
 
 

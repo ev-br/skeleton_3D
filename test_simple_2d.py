@@ -10,6 +10,18 @@ from skel import compute_thin_image
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+# nose test generators:
+
+# 2D images
+def test_simple_2d_images():
+    for fname in ("strip", "loop", "cross", "two-hole"):
+        yield check_skel, fname
+
+# trivial 3D images
+def test_simple_3d():
+    for fname in ['3/stack', '4/stack']:
+        yield check_skel_3d, fname
+
 
 def check_skel(fname, viz=False):
     # compute the thin image and compare the result to that of ImageJ
@@ -47,12 +59,6 @@ def check_skel(fname, viz=False):
         plt.show()
 
 
-# nose test generator
-def test_simple_2d_images():
-    for fname in ("strip", "loop", "cross", "two-hole"):
-        yield check_skel, fname
-
-
 def _viz(img, ax=None, **kwds):
     if ax is None:
         import matplotlib.pyplot as plt
@@ -61,13 +67,6 @@ def _viz(img, ax=None, **kwds):
     x, y = np.nonzero(img)
     ax.scatter(y, img.shape[1] - x, **kwds)
     return ax
-
-
-### trivial 3D images
-
-def test_simple_3d():
-    for fname in ['3/stack', '4/stack']:
-        yield check_skel_3d, fname
 
 
 def check_skel_3d(fname):
