@@ -4,10 +4,13 @@ import numpy as np
 
 from _skel import _compute_thin_image
 
+__all__ = ['compute_thin_image',]
 
 def _prepare_image(img_in):
     """Convert to a binary image, pad the it w/ zeros, and ensure it's 3D.
     """
+    # XXX: force img.astype(np.uint8) or check img_in.dtype?
+
     if img_in.ndim < 2 or img_in.ndim > 3:
         raise ValueError('expect 2D, got ndim = %s' % img_in.ndim)
 
@@ -27,6 +30,7 @@ def _prepare_image(img_in):
 
 def _postprocess_image(img_o):
     """Clip the image (padding is an implementation detail), convert to b/w.
+       If the original was 2D, convert back to 2D.
     """
     img_oo = img_o[1:-1, 1:-1, 1:-1]
     img_oo = img_oo.squeeze()
@@ -35,6 +39,8 @@ def _postprocess_image(img_o):
 
 
 def compute_thin_image(img_in):
+    """Compute the thin image.
+    """
     img = _prepare_image(img_in)
     img = np.asarray(_compute_thin_image(img))
     img = _postprocess_image(img)
