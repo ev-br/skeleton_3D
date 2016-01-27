@@ -2,6 +2,7 @@ from __future__ import division, print_function, absolute_import
 
 import numpy as np
 from numpy.testing import assert_equal
+from numpy.testing.decorators import slow
 
 from skimage import io
 
@@ -20,6 +21,12 @@ def test_simple_2d_images():
 # trivial 3D images
 def test_simple_3d():
     for fname in ['3/stack', '4/stack']:
+        yield check_skel_3d, fname
+
+# 'slow' test: Bat Cochlea from FIJI collections.
+@slow
+def test_large():
+    for fname in ['bat/bat-cochlea-volume',]:
         yield check_skel_3d, fname
 
 

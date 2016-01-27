@@ -1,7 +1,4 @@
 *.pdf
-*tif
-*tiff
-*png
 *raw
 *java
 *pyc
