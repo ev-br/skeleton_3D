@@ -397,8 +397,6 @@ cdef int index_octants(int octant,
     return n
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cdef inline bint is_endpoint(pixel_type neighbors[]):
     """An endpoint has exactly one neighbor in the 26-neighborhood.
     """
@@ -418,7 +416,7 @@ cdef bint is_Euler_invariant(pixel_type neighbors[]):
 
     Parameters
     ----------
-    neighbors : ndarray, shape (27,)
+    neighbors : uint8 C array, shape (27,)
         neighbors of a point
 
     Returns
@@ -426,16 +424,13 @@ cdef bint is_Euler_invariant(pixel_type neighbors[]):
     bool (C bool, that is)
 
     """
-    cdef int octant, n
-    cdef int euler_char = 0
-    for octant in xrange(8):
+    cdef int octant, n, euler_char = 0
+    for octant in range(8):
         n = index_octants(octant, neighbors)
         euler_char += LUT[n]
     return euler_char == 0
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cdef bint is_simple_point(pixel_type neighbors[]):
     """Check is a point is a Simple Point.
 
@@ -445,7 +440,7 @@ cdef bint is_simple_point(pixel_type neighbors[]):
 
     Parameters
     ----------
-    neighbors : ndarray, shape(27,)
+    neighbors : uint8 C array, shape(27,)
         neighbors of the point
 
     Returns
@@ -507,7 +502,7 @@ cdef void octree_labeling(int octant, int label, pixel_type cube[]):
         octant index
     label : int 
         the current label of the center point
-    cube : ndarray, shape(26,)
+    cube : uint8 C array, shape(26,)
         local neighborhood of the point
 
     """
