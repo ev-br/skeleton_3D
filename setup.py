@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import os
-from skimage._build import cython
+
+#from skimage._build import cython
+# a local copy of skimage._build, augmented to handle .pyx.in files
+from _build import cython
 
 base_path = os.path.abspath(os.path.dirname(__file__))
 
@@ -11,7 +14,7 @@ def configuration(parent_package='', top_path=None):
 
     config = Configuration('skeletonize_3d', parent_package, top_path)
 
-    cython(['_skel.pyx'], working_path=base_path)
+    cython(['_skel.pyx.in'], working_path=base_path)
     config.add_extension('_skel', sources=['_skel.c'],
                          include_dirs=[get_numpy_include_dirs()])
     return config
