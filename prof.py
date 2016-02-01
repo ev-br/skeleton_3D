@@ -8,8 +8,15 @@
 #    $ python -m yep prof.py
 #    $ google-pprof --text `which python` prof.py.prof
 #
-from skimage import io
+#from skimage import io
 from skel import compute_thin_image
 
-bat = io.imread('data/bat/bat-cochlea-volume.tif')
-compute_thin_image(bat)
+#bat = io.imread('data/bat/bat-cochlea-volume.tif')
+#compute_thin_image(bat)
+
+import numpy as np
+
+raw = np.fromfile('../lobster.raw', dtype=np.uint8)
+raw = raw.reshape(301, 324, 56)
+
+compute_thin_image(raw)
